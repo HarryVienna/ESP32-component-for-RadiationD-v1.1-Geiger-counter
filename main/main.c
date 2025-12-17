@@ -3,7 +3,8 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #include "driver/gpio.h"
-#include "geiger.h" // Include our new component
+
+#include "geiger.h"
 
 static const char *TAG = "APP";
 

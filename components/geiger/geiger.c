@@ -48,7 +48,7 @@ static void geiger_task(void *pvParameters) {
     }
 
     while (1) {
-        // Wait exactly 1 second
+        // Wait 1 second
         vTaskDelay(pdMS_TO_TICKS(1000));
 
         // 1. Atomically retrieve and reset the counter
