@@ -2,7 +2,7 @@
 
 A interrupt-driven ESP-IDF component for reading RadiationD-v1.1 Geiger-Müller counter with J321 (M4011) tube using the ESP32.
 
-![DSCF7359](https://github.com/user-attachments/assets/4961b8a0-ea8c-455e-8cdc-52ee8da145a0)
+![RadiationD-v1.1](https://github.com/user-attachments/assets/4961b8a0-ea8c-455e-8cdc-52ee8da145a0)
 
 
 This component handles pulse counting via interrupts, calculates the radiation dose rate in **µSv/h**, and implements a **Rolling Average** algorithm to smooth out the stochastic nature of radioactive decay.
