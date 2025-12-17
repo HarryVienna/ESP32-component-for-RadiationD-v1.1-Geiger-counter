@@ -12,17 +12,18 @@ static const char *TAG = "geiger_lib";
 
 #define DEBOUNCE_TIME_US 200
 
-// Interne Variablen (statisch, damit sie privat bleiben)
+// Internal variables (static, so they remain private to this file)
 static atomic_uint pulse_count = ATOMIC_VAR_INIT(0);
 static float current_usvh = 0.0f;
 static float current_cpm = 0.0f;
 
-// Konfiguration speichern
+// Store configuration
 static geiger_config_t active_config;
 static uint32_t *rolling_buffer = NULL;
 
 // ISR Handler
 static void IRAM_ATTR geiger_isr_handler(void* arg) {
+    // Debounce logic (currently commented out)
     // static int64_t last_pulse_time = 0;
     // int64_t current_time = esp_timer_get_time();
 
@@ -34,46 +35,46 @@ static void IRAM_ATTR geiger_isr_handler(void* arg) {
     atomic_fetch_add(&pulse_count, 1);
 }
 
-// Der Hintergrund-Task (ersetzt deine while-Schleife aus main)
+// Background task (handles the calculation loop)
 static void geiger_task(void *pvParameters) {
     int buffer_index = 0;
     uint32_t total_counts_in_period = 0;
 
-    // Puffer initialisieren (Speicher reservieren)
+    // Initialize buffer (allocate memory)
     rolling_buffer = calloc(active_config.rolling_avg_seconds, sizeof(uint32_t));
     if (rolling_buffer == NULL) {
-        ESP_LOGE(TAG, "Kein Speicher für Rolling Buffer!");
+        ESP_LOGE(TAG, "No memory for rolling buffer!");
         vTaskDelete(NULL);
     }
 
     while (1) {
-        // Exakt 1 Sekunde warten
+        // Wait exactly 1 second
         vTaskDelay(pdMS_TO_TICKS(1000));
 
-        // 1. Zähler atomar holen und resetten
+        // 1. Atomically retrieve and reset the counter
         uint32_t counts_this_second = atomic_exchange(&pulse_count, 0);
 
-        // 2. Rolling Average Logik
+        // 2. Rolling Average Logic
         total_counts_in_period -= rolling_buffer[buffer_index];
         total_counts_in_period += counts_this_second;
         rolling_buffer[buffer_index] = counts_this_second;
 
         buffer_index = (buffer_index + 1) % active_config.rolling_avg_seconds;
 
-        // 3. Berechnung
+        // 3. Calculation
         float cpm = (float)total_counts_in_period * (60.0f / (float)active_config.rolling_avg_seconds);
         
-        // Werte in die globalen (statischen) Variablen schreiben
+        // Write values to global (static) variables
         current_cpm = cpm;
         current_usvh = cpm / active_config.conversion_factor;
         
-        // Optional: Debug-Log direkt aus der Lib (kann man auch auskommentieren)
+        // Optional: Debug log directly from the lib (can be commented out)
         // ESP_LOGD(TAG, "CPM: %.1f, uSv/h: %.4f", current_cpm, current_usvh);
     }
 }
 
 void geiger_init(const geiger_config_t *config) {
-    // Konfiguration kopieren
+    // Copy configuration
     active_config = *config;
 
     // GPIO Setup
@@ -85,17 +86,17 @@ void geiger_init(const geiger_config_t *config) {
     //io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
     ESP_ERROR_CHECK(gpio_config(&io_conf));
 
-    // ISR installieren
-    // Checken ob Service schon läuft, um Abstürze zu vermeiden
+    // Install ISR
+    // Check if service is already installed to avoid crashes
     gpio_install_isr_service(0); 
     ESP_ERROR_CHECK(gpio_isr_handler_add(config->gpio_pin, geiger_isr_handler, NULL));
 
-    ESP_LOGI(TAG, "Geiger initialisiert an Pin %d. Starte Task...", config->gpio_pin);
+    ESP_LOGI(TAG, "Geiger initialized at pin %d. Starting task...", config->gpio_pin);
 
-    // Task starten (Stackgröße 4096 ist sicher, Prio 5 ist mittel)
+    // Start task (stack size 4096 is safe, priority 5 is medium)
     xTaskCreate(geiger_task, "geiger_task", 4096, NULL, 5, NULL);
 }
 
-// Getter-Funktionen (Thread-Safe genug für Lesezugriff)
+// Getter functions (thread-safe enough for read access)
 float geiger_get_usvh(void) { return current_usvh; }
 float geiger_get_cpm(void) { return current_cpm; }
