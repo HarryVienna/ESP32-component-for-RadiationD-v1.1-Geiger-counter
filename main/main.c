@@ -12,7 +12,7 @@ void app_main(void) {
     // 1. Create configuration
     geiger_config_t config = {
         .gpio_pin = GPIO_NUM_4,
-        .conversion_factor = 151.0f,
+        .conversion_factor = 153.8f,  // https://muman.ch/muman/muman-geiger-counter.htm       or 151.0 ?
         .rolling_avg_seconds = 600 
     };
 
