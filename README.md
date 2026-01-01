@@ -2,6 +2,8 @@
 
 A interrupt-driven ESP-IDF component for reading RadiationD-v1.1 Geiger-Müller counter with J321 (M4011) tube using the ESP32.
 
+You can find a detailed description [on my website](https://www.haraldkreuzer.net/en/news/measuring-radioactive-radiation-esp32-and-geiger-counter) 
+
 ![RadiationD-v1.1](https://github.com/user-attachments/assets/4961b8a0-ea8c-455e-8cdc-52ee8da145a0)
 
 
